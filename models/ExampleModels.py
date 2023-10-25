@@ -23,7 +23,7 @@ class AutoEncoder(nn.Module):
 
 
         #model = Autoencoder(encoded_space_dim=encoded_space_dim)
-        self.encoder = Encoder(encoded_space_dim=self.encoded_space_dim,fc2_input_dim=self.fc2_input_dim, use_sq_dr= use_sq_dr)
+        self.encoder = Encoder(encoded_space_dim=self.encoded_space_dim,fc2_input_dim=self.fc2_input_dim,dr_min_p= dr_min_p, use_sq_dr= use_sq_dr)
         self.decoder = Decoder(encoded_space_dim=self.encoded_space_dim,fc2_input_dim=self.fc2_input_dim)
         params_to_optimize = [
             {'params': self.encoder.parameters()},
