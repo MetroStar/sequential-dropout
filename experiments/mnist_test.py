@@ -12,6 +12,7 @@ from skimage.metrics import peak_signal_noise_ratio
 from skimage.metrics import structural_similarity as ssim # TODO maybe switch this to torchmetrics to run as batch
 from skimage.metrics import mean_squared_error
 import json
+
 data_dir = '../dataset'
 
 def get_dataset():
@@ -40,7 +41,7 @@ def get_dataset():
     return train_dataset, test_dataset, train_loader, test_loader
 
 '''
-#todo switch this to a config json
+
 config = {
     epochs=25,
     outdir="results",
@@ -153,3 +154,11 @@ def embedding_windows(config):
 
         with open(os.path.join(outdir, 'result.json'), 'w') as fp:
             json.dump(results, fp)
+
+            
+#TODO precision experiments
+
+#TODO targetted embedding training
+
+
+# TODO different embed sampling strategies
