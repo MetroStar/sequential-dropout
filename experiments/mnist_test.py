@@ -1,8 +1,9 @@
 # run through mnist experiments
 import sys, os
 sys.path.append('../models')
+import argparse
+import ExampleModels as em
 
-import models.ExampleModels as em
 import torch
 import numpy as np
 import torchvision
@@ -75,6 +76,7 @@ def embedding_windows(config):
         max_embed_size=window[0]
         min_p = window[1]
         label = window[2]
+        print(f"Training window {label},{max_embed_size},{min_p}")
 
         ae = em.AutoEncoder(max_embed_size,use_sq_dr= True,dr_min_p= min_p, scale_output=False)
                     
@@ -82,22 +84,24 @@ def embedding_windows(config):
         for epoch in range(num_epochs):
             train_loss =ae.train_epoch(train_loader)
             val_loss = ae.test_epoch(test_loader)
-            print('\n EPOCH {}/{} \t train loss {} \t val loss {}'.format(epoch + 1, num_epochs,train_loss,val_loss))
-            diz_loss['train_loss'].append(train_loss)
-            diz_loss['val_loss'].append(val_loss)
+            print('EPOCH {}/{} \t train loss {} \t val loss {}'.format(epoch + 1, num_epochs,train_loss,val_loss))
+            diz_loss['train_loss'].append(float(train_loss))
+            diz_loss['val_loss'].append(float(val_loss))
             
         window_result["loss"] = diz_loss
         
         
         #save models
         if save_models:
-            torch.save(ae, os.path.join(outdir, label+".pth"))
-            window_result["model_path"]= os.path.join(outdir, label+".pth")
-            
+            pth = os.path.join(outdir, label+".pth")
+            torch.save(ae,pth )
+            window_result["model_path"]= pth
+            print(f"Saved model to {pth}")
                         
         
         # run eval
         if run_eval:
+            print("running eval")
             n = 10 # TODO parameterize this?
             r = np.rint(np.linspace(max_embed_size,int(max_embed_size* min_p),n))
 
@@ -135,9 +139,9 @@ def embedding_windows(config):
                     ic= img.cpu().squeeze().numpy()
 
                     rc=rec_img.cpu().squeeze().numpy()
-                    psnrs.append(peak_signal_noise_ratio(ic, rc))
-                    ssims.append(ssim(ic,rc, data_range=1.0))# 1.0 data range for sigmoid
-                    mses.append(mean_squared_error(ic,rc))
+                    psnrs.append(float(peak_signal_noise_ratio(ic, rc)))
+                    ssims.append(float(ssim(ic,rc, data_range=1.0)))# 1.0 data range for sigmoid
+                    mses.append(float(mean_squared_error(ic,rc)))
                 avg_psnrs.append(sum(psnrs)/len(psnrs))
                 avg_ssims.append(sum(ssims)/len(ssims))
                 avg_mses.append(sum(mses)/len(mses))
@@ -147,13 +151,16 @@ def embedding_windows(config):
             window_result["embedding_sizes"]= r
             
             window_results.append(window_result)
+            print("Completed Eval")
             
         results["window_results"] = window_result
         
         #write results
 
         with open(os.path.join(outdir, 'result.json'), 'w') as fp:
+            #print(results)
             json.dump(results, fp)
+            print("writing results")
 
             
 #TODO precision experiments
@@ -162,3 +169,38 @@ def embedding_windows(config):
 
 
 # TODO different embed sampling strategies
+
+import argparse
+if __name__ == '__main__':
+    
+
+
+    parser = argparse.ArgumentParser(description='Run MNIST Tests')
+    parser.add_argument('--config_file', metavar='path', required=False,
+                        help='path to config file')
+    parser.add_argument('--test', required=True,
+                        help='test mode', choices=["windows", "fixed_size"])
+
+    args = parser.parse_args()
+    
+    test = args.test.upper()
+    
+    #TODO load config file
+    
+    if test == "WINDOWS":
+        config = {
+            "epochs":20,
+            "outdir":"results",
+            "experiment_label":"windowed_experiment",
+            "repeat":1,
+            "run_eval":True,
+            "save_models":True,
+            "windows":[
+                (20,.2,"Max20Min4"), 
+                (40,.1,"Max40Min4"), 
+                (80,.05, "Max80Min4")
+
+            ]
+        }
+        embedding_windows(config)
+    
