@@ -156,7 +156,7 @@ def embedding_windows(config):
         
         #write results
 
-        with open(os.path.join(outdir, 'result.json'), 'w') as fp:
+        with open(os.path.join(outdir, f'result_{label}.json'), 'w') as fp:
             #print(results)
             json.dump(results, fp)
             print("writing results")
