@@ -148,7 +148,6 @@ def embedding_windows(config):
             window_result["psnr"] =avg_psnrs
             window_result["ssim"]= avg_ssims
             window_result["mse"] = avg_mses
-            window_result["embedding_sizes"]= r
             
             window_results.append(window_result)
             print("Completed Eval")
