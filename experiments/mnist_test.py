@@ -41,6 +41,9 @@ def get_dataset():
     
     return train_dataset, test_dataset, train_loader, test_loader
 
+#TODO do we want epochs per window
+
+
 '''
 
 config = {
@@ -148,18 +151,18 @@ def embedding_windows(config):
             window_result["psnr"] =avg_psnrs
             window_result["ssim"]= avg_ssims
             window_result["mse"] = avg_mses
-            
+            window_result["emb_dim"]= [float(x) for x in r]
             window_results.append(window_result)
             print("Completed Eval")
             
-        results["window_results"] = window_result
+    results["window_results"] = window_results
         
-        #write results
+    #write results
 
-        with open(os.path.join(outdir, f'result_{label}.json'), 'w') as fp:
-            #print(results)
-            json.dump(results, fp)
-            print("writing results")
+    with open(os.path.join(outdir, f'window_result.json'), 'w') as fp:
+        #print(results)
+        json.dump(results, fp)
+        print("writing results")
 
             
 #TODO precision experiments
