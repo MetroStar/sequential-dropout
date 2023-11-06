@@ -43,6 +43,8 @@ def get_dataset():
 
 #TODO do we want epochs per window
 
+# TODO scale output test
+
 
 '''
 
@@ -167,8 +169,101 @@ def embedding_windows(config):
             
 #TODO precision experiments
 
-#TODO targetted embedding training
+'''
+config = {
+    epochs=25,
+    outdir="results",
+    experiment_label="fixedembed_experiment"
+    repeat=1,
+    run_eval=True,
+    save_models=True,
+    embeddings=[
+        4,8,12,16,20,24,28,32,36,40
+        
+    ]
+}
+'''
+def fixed_embedding(config):
+    
+    num_epochs = config["epochs"]
+    repeat = config["repeat"] #TODO implement
+    embedding_configs = config["embeddings"]
+    outdir = config["outdir"]   
+    run_eval = config["run_eval"]
+    save_models = config["save_models"]
+   
+    train_dataset, test_dataset, train_loader, test_loader = get_dataset()
+    
+    results = {}
+    results["config"] = config
+    embed_results = []
+    for embedding in embedding_configs:
+        embed_result ={}
 
+        label = f"embed_{embedding}"
+        print(f"Training embedding {label},{embedding}")
+
+        ae = em.AutoEncoder(embedding,use_sq_dr= False)
+                    
+        diz_loss = {'train_loss':[],'val_loss':[]}
+        for epoch in range(num_epochs):
+            train_loss =ae.train_epoch(train_loader)
+            val_loss = ae.test_epoch(test_loader)
+            print('EPOCH {}/{} \t train loss {} \t val loss {}'.format(epoch + 1, num_epochs,train_loss,val_loss))
+            diz_loss['train_loss'].append(float(train_loss))
+            diz_loss['val_loss'].append(float(val_loss))
+            
+        embed_result["loss"] = diz_loss
+        
+        #save models
+        if save_models:
+            pth = os.path.join(outdir, label+".pth")
+            torch.save(ae,pth )
+            embed_result["model_path"]= pth
+            print(f"Saved model to {pth}")
+
+        # run eval
+        if run_eval:
+            print(f"running eval on {embedding}")
+             
+            encoder = ae.encoder
+            decoder = ae.decoder
+            device = ae.device
+
+            psnrs = []
+            ssims = []
+            mses=[] 
+            
+            #TODO use a built in way of doing this instead of iterating 1 by 1
+
+           
+            for sample_idx in range(len(test_dataset)):
+                img = test_dataset[sample_idx][0].unsqueeze(0).to(device)
+                encoder.eval()
+                decoder.eval()
+                with torch.no_grad():
+                    embedding = encoder(img)
+
+                    rec_img  = decoder(embedding)
+                ic= img.cpu().squeeze().numpy()
+
+                rc=rec_img.cpu().squeeze().numpy()
+                psnrs.append(float(peak_signal_noise_ratio(ic, rc)))
+                ssims.append(float(ssim(ic,rc, data_range=1.0)))# 1.0 data range for sigmoid
+                mses.append(float(mean_squared_error(ic,rc)))
+            avg_psnr=sum(psnrs)/len(psnrs)
+            avg_ssim=sum(ssims)/len(ssims)
+            avg_mse=sum(mses)/len(mses)
+            embed_result["psnr"] =avg_psnr
+            embed_result["ssim"]= avg_ssim
+            embed_result["mse"] = avg_mse
+            embed_results.append(embed_result)
+            
+    results['embed_results'] = embed_results
+    with open(os.path.join(outdir, f'embed_result.json'), 'w') as fp:
+        #print(results)
+        json.dump(results, fp)
+        print("writing results")                             
 
 # TODO different embed sampling strategies
 
@@ -181,7 +276,7 @@ if __name__ == '__main__':
     parser.add_argument('--config_file', metavar='path', required=False,
                         help='path to config file')
     parser.add_argument('--test', required=True,
-                        help='test mode', choices=["windows", "fixed_size"])
+                        help='test mode', choices=["windows", "fixed"])
 
     args = parser.parse_args()
     
@@ -205,4 +300,18 @@ if __name__ == '__main__':
             ]
         }
         embedding_windows(config)
+    elif test == "FIXED":
+        config = {
+            "epochs":20,
+            "outdir":"results",
+            "experiment_label":"fixedembed_experiment",
+            "repeat":1,
+            "run_eval":True,
+            "save_models":True,
+            "embeddings":[
+                4,8,12,16,20,24,28, 32, 36,40
+        
+            ]
+        }
+        fixed_embedding(config)
     
