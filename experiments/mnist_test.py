@@ -265,6 +265,9 @@ def fixed_embedding(config):
         json.dump(results, fp)
         print("writing results")                             
 
+def pca(config):
+    pass
+        
 # TODO different embed sampling strategies
 
 import argparse
@@ -276,7 +279,7 @@ if __name__ == '__main__':
     parser.add_argument('--config_file', metavar='path', required=False,
                         help='path to config file')
     parser.add_argument('--test', required=True,
-                        help='test mode', choices=["windows", "fixed"])
+                        help='test mode', choices=["windows", "fixed", "pca"])
 
     args = parser.parse_args()
     
@@ -314,4 +317,18 @@ if __name__ == '__main__':
             ]
         }
         fixed_embedding(config)
+        
+    elif test =="PCA":
+        config = {
+            "outdir":"results",
+            "experiment_label":"pca_experiment",
+            "repeat":1,
+            "run_eval":True,
+            "save_models":True,
+            "components":[
+                4,8,12,16,20,24,28, 32, 36,40
+        
+            ]
+        }
+        pca(config)
     
