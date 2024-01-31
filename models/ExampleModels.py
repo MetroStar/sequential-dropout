@@ -51,7 +51,9 @@ class AutoEncoder(nn.Module):
         # Iterate the dataloader (we do not need the label values, this is unsupervised learning)
         for image_batch, _ in dataloader: # with "_" we just ignore the labels (the second element of the dataloader tuple)
             # Move tensor to the proper device
+            
             image_batch = image_batch.to(self.device)
+            
             # Encode data
             encoded_data = self.encoder(image_batch)
             # Decode data

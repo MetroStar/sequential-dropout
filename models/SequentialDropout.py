@@ -8,7 +8,10 @@ class SequentialDropout(nn.Module):
             raise ValueError("dropout probability has to be between 0 and 1, " "but got {}".format(p))
         self.min_p = min_p
         self.scale_output = scale_output
-        
+        #device
+        self.device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+
+
     # only set up to handle 1D tensors currently    
     def forward(self, X):
         sh = X.shape
@@ -20,9 +23,9 @@ class SequentialDropout(nn.Module):
             # mask generation
             sh = sh[1]
             max_split = int(sh * self.min_p)
-            split = torch.randint(0, sh - max_split, (1,)) 
-            ones = torch.ones(sh - split)
-            zeros = torch.zeros(split)
+            split = torch.randint(0, sh - max_split, (1,), device=self.device) 
+            ones = torch.ones(sh - split, device=self.device)
+            zeros = torch.zeros(split, device=self.device)
             
             mask = torch.cat((ones,zeros), 0)
             
