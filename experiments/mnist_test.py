@@ -264,7 +264,7 @@ def fixed_embedding(config):
         #print(results)
         json.dump(results, fp)
         print("writing results")                             
-
+# do pca at different embedding sizes and evaluate
 def pca(config):
     pass
         
