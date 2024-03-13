@@ -12,7 +12,9 @@ from torch.utils.data import DataLoader,random_split
 from skimage.metrics import peak_signal_noise_ratio
 from skimage.metrics import structural_similarity as ssim # TODO maybe switch this to torchmetrics to run as batch
 from skimage.metrics import mean_squared_error
+from sklearn.decomposition import PCA
 import json
+import pickle
 
 data_dir = '../dataset'
 
@@ -83,7 +85,7 @@ def embedding_windows(config):
         label = window[2]
         print(f"Training window {label},{max_embed_size},{min_p}")
 
-        ae = em.AutoEncoder(max_embed_size,use_sq_dr= True,dr_min_p= min_p, scale_output=False)
+        ae = em.MNISTAutoEncoder(max_embed_size,use_sq_dr= True,dr_min_p= min_p, scale_output=False)
                     
         diz_loss = {'train_loss':[],'val_loss':[]}
         for epoch in range(num_epochs):
@@ -107,7 +109,7 @@ def embedding_windows(config):
         # run eval
         if run_eval:
             print("running eval")
-            n = 10 # TODO parameterize this?
+            n = 10 # TODO parameterize this? - how many embedding sizes to use for eval
             r = np.rint(np.linspace(max_embed_size,int(max_embed_size* min_p),n))
 
             encoder = ae.encoder
@@ -203,7 +205,7 @@ def fixed_embedding(config):
         label = f"embed_{embedding}"
         print(f"Training embedding {label},{embedding}")
 
-        ae = em.AutoEncoder(embedding,use_sq_dr= False)
+        ae = em.MNISTAutoEncoder(embedding,use_sq_dr= False)
                     
         diz_loss = {'train_loss':[],'val_loss':[]}
         for epoch in range(num_epochs):
@@ -266,8 +268,30 @@ def fixed_embedding(config):
         print("writing results")                             
 # do pca at different embedding sizes and evaluate
 def pca(config):
-    pass
-        
+    
+    repeat = config["repeat"] #TODO implement
+    embedding_configs = config["embeddings"]
+    outdir = config["outdir"]   
+    run_eval = config["run_eval"]
+    save_models = config["save_models"]
+   
+    train_dataset, test_dataset, train_loader, test_loader = get_dataset()
+    
+    results = {}
+    results["config"] = config
+    embed_results = []
+   
+    print(np.shape(train_dataset.data.numpy()))
+    train_dataset = train_dataset.data.numpy()
+    train_dataset = np.reshape(train_dataset, (60000, 28*28))
+    print(np.shape(train_dataset))
+    pca = PCA(n_components=np.max(embedding_configs))
+    pca.fit(train_dataset)
+
+    if save_models:
+        with open(os.path.join(outdir, "pca.pkl"), 'wb') as pickle_file:
+            pickle.dump(pca, pickle_file)
+
 # TODO different embed sampling strategies
 
 import argparse
@@ -325,7 +349,7 @@ if __name__ == '__main__':
             "repeat":1,
             "run_eval":True,
             "save_models":True,
-            "components":[
+            "embeddings":[
                 4,8,12,16,20,24,28, 32, 36,40
         
             ]

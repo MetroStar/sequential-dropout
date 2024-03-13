@@ -4,9 +4,9 @@ import numpy as np
 from SequentialDropout import SequentialDropout
 
 
-#TODO maybe change this autoencoder to be an MNIST specific model
 
-class AutoEncoder(nn.Module):
+
+class MNISTAutoEncoder(nn.Module):
     def __init__(self, encoded_space_dim,fc2_input_dim=128, use_sq_dr= True,dr_min_p= .2, scale_output=False):
         super().__init__()
         self.encoded_space_dim = encoded_space_dim
