@@ -23,7 +23,8 @@ class MNISTAutoEncoder(nn.Module):
 
 
         #model = Autoencoder(encoded_space_dim=encoded_space_dim)
-        self.encoder = Encoder(encoded_space_dim=self.encoded_space_dim,fc2_input_dim=self.fc2_input_dim,dr_min_p= dr_min_p, use_sq_dr= use_sq_dr)
+        self.encoder = Encoder(encoded_space_dim=self.encoded_space_dim,fc2_input_dim=self.fc2_input_dim,
+                               dr_min_p= dr_min_p, use_sq_dr= use_sq_dr, scale_output=scale_output)
         self.decoder = Decoder(encoded_space_dim=self.encoded_space_dim,fc2_input_dim=self.fc2_input_dim)
         params_to_optimize = [
             {'params': self.encoder.parameters()},
@@ -121,6 +122,7 @@ class Encoder(nn.Module):
                 nn.Linear(3 * 3 * 32, 128),
                 nn.ReLU(True),
                 nn.Linear(128, encoded_space_dim),
+                nn.ReLU(True), # help deal with scale output - ensure no negatives
                 SequentialDropout(min_p = dr_min_p,scale_output=scale_output)
             )
         else:

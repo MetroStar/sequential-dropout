@@ -28,14 +28,27 @@ class SequentialDropout(nn.Module):
             zeros = torch.zeros(split, device=self.device)
             
             mask = torch.cat((ones,zeros), 0)
-            
-            # scale by dsitribution
-            if self.scale_output:
-                mask = mask * (sh / (sh-split))
-             
             mask = mask.repeat(X.shape[0],1)
+            # scale by dsitribution
+            scale = 1.
+            if self.scale_output:
+                #scale =  float(sh) / (sh-split)
+                #calculate keep prob
+                #scale = (sh - split) / float(sh)
+
+                orig_sum = torch.sum(X)
+                new_sum = torch.sum(X * mask)
+                scale = orig_sum / new_sum
+                #print(orig_sum, torch.sum(X * mask * scale))
+
+             
             
-            return X * mask
+            #print("break")
+            #print(scale)
+            #print(X * mask )
+            #print(X * mask * scale)
+            
+            return X * mask * scale
         
             
         return X
