@@ -30,8 +30,8 @@ class MNISTAutoEncoder(nn.Module):
             {'params': self.encoder.parameters()},
             {'params': self.decoder.parameters()}
         ]
-
-        self.optimizer = torch.optim.Adam(params_to_optimize, lr=lr, weight_decay=1e-05)
+        #weight decay 1e-05
+        self.optimizer = torch.optim.Adam(params_to_optimize, lr=lr, weight_decay=0)
 
         # Check if the GPU is available
         self.device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
@@ -122,14 +122,17 @@ class Encoder(nn.Module):
                 nn.Linear(3 * 3 * 32, 128),
                 nn.ReLU(True),
                 nn.Linear(128, encoded_space_dim),
-                nn.ReLU(True), # help deal with scale output - ensure no negatives
+                #nn.ReLU(True), # help deal with scale output - ensure no negatives
+                #try sigmoid
+                nn.Sigmoid(),
                 SequentialDropout(min_p = dr_min_p,scale_output=scale_output)
             )
         else:
             self.encoder_lin = nn.Sequential(
                 nn.Linear(3 * 3 * 32, 128),
                 nn.ReLU(True),
-                nn.Linear(128, encoded_space_dim)
+                nn.Linear(128, encoded_space_dim),
+                #nn.ReLU(True), # help deal with scale output - ensure no negatives
             )
         
     def forward(self, x):

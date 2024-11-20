@@ -33,6 +33,7 @@ class SequentialDropout(nn.Module):
             scale = 1.
             if self.scale_output:
                 #scale =  float(sh) / (sh-split)
+                
                 #calculate keep prob
                 #scale = (sh - split) / float(sh)
 
@@ -48,7 +49,7 @@ class SequentialDropout(nn.Module):
             #print(X * mask )
             #print(X * mask * scale)
             
-            return X * mask * scale
+            return (X * mask) * scale
         
             
         return X
