@@ -7,7 +7,7 @@ from SequentialDropout import SequentialDropout
 
 
 class MNISTAutoEncoder(nn.Module):
-    def __init__(self, encoded_space_dim,fc2_input_dim=128, use_sq_dr= True,dr_min_p= .2, scale_output=False):
+    def __init__(self, encoded_space_dim,fc2_input_dim=128, use_dr= "sequential",dr_min_p= .2, scale_output=False):
         super().__init__()
         self.encoded_space_dim = encoded_space_dim
         self.fc2_input_dim = fc2_input_dim
@@ -24,7 +24,7 @@ class MNISTAutoEncoder(nn.Module):
 
         #model = Autoencoder(encoded_space_dim=encoded_space_dim)
         self.encoder = Encoder(encoded_space_dim=self.encoded_space_dim,fc2_input_dim=self.fc2_input_dim,
-                               dr_min_p= dr_min_p, use_sq_dr= use_sq_dr, scale_output=scale_output)
+                               dr_min_p= dr_min_p, use_dr= use_dr, scale_output=scale_output)
         self.decoder = Decoder(encoded_space_dim=self.encoded_space_dim,fc2_input_dim=self.fc2_input_dim)
         params_to_optimize = [
             {'params': self.encoder.parameters()},
@@ -100,7 +100,7 @@ class MNISTAutoEncoder(nn.Module):
 
 class Encoder(nn.Module):
     
-    def __init__(self, encoded_space_dim,fc2_input_dim,use_sq_dr=True, dr_min_p= .2, scale_output=False):
+    def __init__(self, encoded_space_dim,fc2_input_dim,use_dr="sequential", dr_min_p= .2, scale_output=False):
         super().__init__()
         
         ### Convolutional section
@@ -117,7 +117,7 @@ class Encoder(nn.Module):
         ### Flatten layer
         self.flatten = nn.Flatten(start_dim=1)
         ### Linear section
-        if use_sq_dr:
+        if use_dr == "sequential":
             self.encoder_lin = nn.Sequential(
                 nn.Linear(3 * 3 * 32, 128),
                 nn.ReLU(True),
@@ -127,6 +127,16 @@ class Encoder(nn.Module):
                 nn.Sigmoid(),
                 SequentialDropout(min_p = dr_min_p,scale_output=scale_output)
             )
+        elif use_dr == "standard":
+            self.encoder_lin = nn.Sequential(
+                nn.Linear(3 * 3 * 32, 128),
+                nn.ReLU(True),
+                nn.Linear(128, encoded_space_dim),
+
+                nn.Sigmoid(),
+                nn.Dropout(p=(1.0-dr_min_p))
+            )
+
         else:
             self.encoder_lin = nn.Sequential(
                 nn.Linear(3 * 3 * 32, 128),

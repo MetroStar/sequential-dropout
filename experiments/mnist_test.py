@@ -85,7 +85,7 @@ def embedding_windows(config):
         label = window[2]
         print(f"Training window {label},{max_embed_size},{min_p}")
 
-        ae = em.MNISTAutoEncoder(max_embed_size,use_sq_dr= True,dr_min_p= min_p, scale_output=False)
+        ae = em.MNISTAutoEncoder(max_embed_size,use_dr= "sequential",dr_min_p= min_p, scale_output=False)
                     
         diz_loss = {'train_loss':[],'val_loss':[]}
         for epoch in range(num_epochs):
@@ -205,7 +205,7 @@ def fixed_embedding(config):
         label = f"embed_{embedding}"
         print(f"Training embedding {label},{embedding}")
 
-        ae = em.MNISTAutoEncoder(embedding,use_sq_dr= False)
+        ae = em.MNISTAutoEncoder(embedding,use_dr= "none")
                     
         diz_loss = {'train_loss':[],'val_loss':[]}
         for epoch in range(num_epochs):
